@@ -1,9 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:life_garden/core/routes/app_routes.dart';
 import 'package:life_garden/core/theme/app_theme.dart';
 import 'package:life_garden/firebase_options.dart';
 import 'package:life_garden/screens/splash_screen.dart';
+
  
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,14 +35,16 @@ class _LifeGardenAppState extends State<LifeGardenApp> {
  
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Life Garden',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: _themeMode,
-      themeAnimationDuration: const Duration(milliseconds: 350),
-      themeAnimationCurve: Curves.easeInOutCubic,
+   return GetMaterialApp(
+  title: 'Life Garden',
+  debugShowCheckedModeBanner: false,
+
+  theme: AppTheme.light,
+  darkTheme: AppTheme.dark,
+  themeMode: _themeMode,
+
+  themeAnimationDuration: const Duration(milliseconds: 350),
+  themeAnimationCurve: Curves.easeInOutCubic,
  
       //  SplashScreen ko route ke zariye open karo
       initialRoute: AppRoutes.splash,
