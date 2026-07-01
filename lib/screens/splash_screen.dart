@@ -1,9 +1,7 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:life_garden/core/service/onboarding_service.dart';
 import 'package:life_garden/core/theme/app_spacing.dart';
 import 'package:life_garden/core/widgets/animated_plant_logo.dart';
 import 'package:life_garden/screens/onboarding_screen.dart';
@@ -54,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen>
     _loaderScale = _scaleInterval(0.48, 1.0, beginScale: 0.9);
 
     _controller.forward();
-   _navigationTimer = Timer(const Duration(seconds: 4),_decideNextScreen,);
+    _navigationTimer = Timer(const Duration(seconds: 4), _navigateToOnboarding);
   }
 
   Animation<double> _interval(double begin, double end) {
@@ -77,61 +75,32 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
- Future<void> _decideNextScreen() async {
-  if (!mounted) return;
+  void _navigateToOnboarding() {
+    if (!mounted) return;
 
-  final hasSeenOnboarding =
-      await OnboardingService.hasSeenOnboarding();
-
-  final currentUser = FirebaseAuth.instance.currentUser;
-
-  Widget nextScreen;
-
-  if (!hasSeenOnboarding) {
-    // First time app open
-    nextScreen = OnboardingScreen(
-      onThemeToggle: widget.onThemeToggle,
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 650),
+        reverseTransitionDuration: const Duration(milliseconds: 400),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return OnboardingScreen(onThemeToggle: widget.onThemeToggle);
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutCubic,
+          );
+          return FadeTransition(
+            opacity: curved,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+              child: child,
+            ),
+          );
+        },
+      ),
     );
-  } else if (currentUser != null) {
-    // Already logged in
-    nextScreen = const BottomNavScreen();
-  } else {
-    // Onboarding completed but not logged in
-    nextScreen = const LoginScreen();
   }
-
-  if (!mounted) return;
-
-  Navigator.of(context).pushReplacement(
-    PageRouteBuilder(
-      transitionDuration: const Duration(milliseconds: 650),
-      reverseTransitionDuration: const Duration(milliseconds: 400),
-      pageBuilder: (_, __, ___) => nextScreen,
-      transitionsBuilder: (
-        context,
-        animation,
-        secondaryAnimation,
-        child,
-      ) {
-        final curved = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeInOutCubic,
-        );
-
-        return FadeTransition(
-          opacity: curved,
-          child: ScaleTransition(
-            scale: Tween<double>(
-              begin: 0.96,
-              end: 1.0,
-            ).animate(curved),
-            child: child,
-          ),
-        );
-      },
-    ),
-  );
-}
 
   @override
   void dispose() {
