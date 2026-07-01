@@ -1,15 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:life_garden/core/controller/splash_controller.dart';
+
 import 'package:life_garden/core/theme/app_spacing.dart';
 import 'package:life_garden/core/widgets/animated_plant_logo.dart';
-import 'package:life_garden/screens/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key, this.onThemeToggle});
-
-  final VoidCallback? onThemeToggle;
+  const SplashScreen({super.key});
 
   static const _gradientStart = Color(0xFF2E7D32);
   static const _gradientEnd = Color(0xFF81C784);
@@ -29,11 +29,14 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _subtitleScale;
   late final Animation<double> _loaderFade;
   late final Animation<double> _loaderScale;
-  Timer? _navigationTimer;
 
   @override
   void initState() {
     super.initState();
+
+    // SplashController ko inject karo -> isi se navigation logic chalega
+    Get.put(SplashController());
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
@@ -52,7 +55,6 @@ class _SplashScreenState extends State<SplashScreen>
     _loaderScale = _scaleInterval(0.48, 1.0, beginScale: 0.9);
 
     _controller.forward();
-    _navigationTimer = Timer(const Duration(seconds: 4), _navigateToOnboarding);
   }
 
   Animation<double> _interval(double begin, double end) {
@@ -75,36 +77,8 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  void _navigateToOnboarding() {
-    if (!mounted) return;
-
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder<void>(
-        transitionDuration: const Duration(milliseconds: 650),
-        reverseTransitionDuration: const Duration(milliseconds: 400),
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return OnboardingScreen(onThemeToggle: widget.onThemeToggle);
-        },
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final curved = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOutCubic,
-          );
-          return FadeTransition(
-            opacity: curved,
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-              child: child,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   @override
   void dispose() {
-    _navigationTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -132,22 +106,15 @@ class _SplashScreenState extends State<SplashScreen>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Ambient light accents
             Positioned(
               top: -size.height * 0.08,
               left: -size.width * 0.15,
-              child: _AmbientGlow(
-                size: size.width * 0.7,
-                opacity: 0.10,
-              ),
+              child: _AmbientGlow(size: size.width * 0.7, opacity: 0.10),
             ),
             Positioned(
               bottom: size.height * 0.12,
               right: -size.width * 0.2,
-              child: _AmbientGlow(
-                size: size.width * 0.55,
-                opacity: 0.07,
-              ),
+              child: _AmbientGlow(size: size.width * 0.55, opacity: 0.07),
             ),
             SafeArea(
               child: Padding(
@@ -229,10 +196,7 @@ class _AnimatedBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: fade,
-      child: ScaleTransition(
-        scale: scale,
-        child: child,
-      ),
+      child: ScaleTransition(scale: scale, child: child),
     );
   }
 }
@@ -273,10 +237,7 @@ class _PremiumLoader extends StatelessWidget {
 }
 
 class _AmbientGlow extends StatelessWidget {
-  const _AmbientGlow({
-    required this.size,
-    required this.opacity,
-  });
+  const _AmbientGlow({required this.size, required this.opacity});
 
   final double size;
   final double opacity;
