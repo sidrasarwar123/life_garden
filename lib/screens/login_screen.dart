@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:life_garden/core/theme/app_image.dart';
+import 'package:life_garden/core/widgets/button/google_button.dart';
+import 'package:life_garden/core/widgets/textfield/field_label.dart';
+import 'package:life_garden/core/widgets/textfield/round_textfield.dart';
 
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
@@ -68,101 +71,58 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Email field
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  hintText: 'Email',
-                  prefixIcon: const Icon(
-                    Icons.email_outlined,
-                    color: AppColors.primary,
-                  ),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.md,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.buttonRadius),
-                    borderSide: BorderSide(
-                      color: AppColors.textSecondary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.buttonRadius),
-                    borderSide: BorderSide(
-                      color: AppColors.textSecondary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.buttonRadius),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
-                      width: 1.5,
-                    ),
-                  ),
+             const SizedBox(height: AppSpacing.xl),
+ 
+             
+                const SizedBox(height: AppSpacing.md),
+ 
+                FieldLabel('Email Address'),
+                const SizedBox(height: AppSpacing.sm),
+                RoundedTextField(
+                  controller: _emailController,
+                  hint: 'Enter your email',
+                  prefixIcon: Icons.mail_outline_rounded,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                    if (!emailRegex.hasMatch(v.trim())) {
+                      return 'Enter a valid email address';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Password field
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  hintText: 'Password',
-                  prefixIcon: const Icon(
-                    Icons.lock_outline,
-                    color: AppColors.primary,
-                  ),
+                const SizedBox(height: AppSpacing.md),
+ 
+                FieldLabel('Password'),
+                const SizedBox(height: AppSpacing.sm),
+                RoundedTextField(
+                  controller: _passwordController,
+                  hint: 'Create a password',
+                  prefixIcon: Icons.lock_outline_rounded,
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.next,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: AppColors.textSecondary,
+                      size: 20,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.md,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.buttonRadius),
-                    borderSide: BorderSide(
-                      color: AppColors.textSecondary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.buttonRadius),
-                    borderSide: BorderSide(
-                      color: AppColors.textSecondary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.buttonRadius),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
-                      width: 1.5,
-                    ),
-                  ),
+                  validator: (v) {
+                    if (v == null || v.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
                 ),
-              ),
               const SizedBox(height: AppSpacing.xs),
 
               // Forgot password
@@ -170,6 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
+                    Navigator.pushNamed(context, '/forgot_password');
                     // TODO: Navigate to forgot password screen
                   },
                   style: TextButton.styleFrom(
@@ -247,37 +208,9 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: AppSpacing.lg),
 
               // Continue with Google
-              SizedBox(
-                height: 52,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Handle Google sign-in
-                  },
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: AppColors.background,
-                    side: BorderSide(
-                      color: AppColors.textSecondary.withValues(alpha: 0.3),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.buttonRadius),
-                    ),
-                  ),
-                  icon: Image.asset(
-                    AppImage.google,
-                    width: 20,
-    
-  ),
-                  label: const Text(
-                    'Continue with Google',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-              ),
+            GoogleButton(
+                onPressed: () {}
+            ),
               const SizedBox(height: AppSpacing.xl),
 
               // Sign up
@@ -293,6 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   GestureDetector(
                     onTap: () {
+                      Navigator.pushNamed(context, '/signup');
                       // TODO: Navigate to sign up screen
                     },
                     child: const Text(
