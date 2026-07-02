@@ -137,8 +137,8 @@ class LoginScreen extends GetView<LoginController> {
                               width: 22,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.4,
-                                valueColor:
-                                    AlwaysStoppedAnimation(Colors.white),
+                                // valueColor:
+                                //     AlwaysStoppedAnimation(Colors.white),
                               ),
                             )
                           : const Text(

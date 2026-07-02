@@ -1,4 +1,5 @@
 // lib/core/controllers/signup_controller.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -47,33 +48,69 @@ class SignUpController extends GetxController {
     return null;
   }
 
-  Future<void> createAccount() async {
-    if (!formKey.currentState!.validate()) return;
+Future<void> createAccount() async {
+  if (!formKey.currentState!.validate()) return;
 
-    isLoading.value = true;
+  isLoading.value = true;
 
-    try {
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+  try {
+    debugPrint("Step 1");
 
-      // Optional: naam Firebase profile mein save karein
-      await credential.user?.updateDisplayName(nameController.text.trim());
+    final credential =
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
 
-      Get.offAllNamed(AppRoutes.home);
-    } on FirebaseAuthException catch (e) {
-      Get.snackbar(
-        'Signup Failed',
-        e.message ?? 'Something went wrong. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
+    debugPrint("Step 2");
+
+    final user = credential.user!;
+
+    debugPrint("Step 3");
+
+    await user.updateDisplayName(nameController.text.trim());
+
+   
+    await FirebaseFirestore.instance
+        .collection('userData')
+        .doc(user.uid)
+        .set({
+      'userId': user.uid,
+      'name': nameController.text.trim(),
+      'email': emailController.text.trim(),
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    debugPrint('Account created: ${user.uid}');
+
+    Get.snackbar(
+      'Success',
+      'Account created successfully',
+      snackPosition: SnackPosition.TOP,
+    );
+
+    Get.offAllNamed(AppRoutes.home);
+  } on FirebaseAuthException catch (e) {
+    debugPrint("Error Code: ${e.code}");
+    debugPrint("Error Message: ${e.message}");
+
+    Get.snackbar(
+      "Signup Failed",
+      e.message ?? "Something went wrong",
+      snackPosition: SnackPosition.TOP,
+    );
+  } catch (e) {
+    debugPrint("General Error: $e");
+
+    Get.snackbar(
+      "Error",
+      e.toString(),
+      snackPosition: SnackPosition.TOP,
+    );
+  } finally {
+    isLoading.value = false;
   }
-
+}
   void goBackToLogin() => Get.back();
 
   @override

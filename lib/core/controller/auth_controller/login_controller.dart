@@ -48,7 +48,7 @@ class LoginController extends GetxController {
       Get.snackbar(
         'Login Failed',
         errorMessage.value,
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     } finally {
       isLoading.value = false;

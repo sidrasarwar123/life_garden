@@ -1,4 +1,7 @@
+// lib/screens/signup_screen.dart
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:life_garden/core/controller/auth_controller/sinup_controller.dart';
 import 'package:life_garden/core/theme/app_colors.dart';
 import 'package:life_garden/core/theme/app_spacing.dart';
 import 'package:life_garden/core/theme/app_textstyle.dart';
@@ -9,69 +12,34 @@ import 'package:life_garden/core/widgets/divider/or_divider.dart';
 import 'package:life_garden/core/widgets/illustrations/sprout_illustration.dart';
 import 'package:life_garden/core/widgets/textfield/field_label.dart';
 import 'package:life_garden/core/widgets/textfield/round_textfield.dart';
- 
 
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends GetView<SignUpController> {
   const SignUpScreen({super.key});
- 
-  @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
-}
- 
-class _SignUpScreenState extends State<SignUpScreen> {
-  final _formKey = GlobalKey<FormState>();
- 
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
- 
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
-  bool _isLoading = false;
- 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
- 
-  Future<void> _onCreateAccount() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
-    // TODO: hook up to your auth/repository layer.
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-  }
- 
+
   @override
   Widget build(BuildContext context) {
+    // controller sirf ek baar create hoga (agar already put hai to same instance milega)
+    Get.put(SignUpController());
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          
           padding: AppSpacing.screenPadding(context).copyWith(
             top: AppSpacing.lg,
             bottom: AppSpacing.xl,
           ),
           child: Form(
-            key: _formKey,
+            key: controller.formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-           
-              const AppBackButton(),
-               
- 
+                const AppBackButton(),
+
                 // Sprout illustration
                 const Center(child: SproutIllustration(size: 110)),
                 const SizedBox(height: AppSpacing.lg),
- 
+
                 Text(
                   'Create Account',
                   textAlign: TextAlign.center,
@@ -84,121 +52,99 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   style: AppTextStyles.bodyMd,
                 ),
                 const SizedBox(height: AppSpacing.xl),
- 
+
                 FieldLabel('Full Name'),
                 const SizedBox(height: AppSpacing.sm),
                 RoundedTextField(
-                  controller: _nameController,
+                  controller: controller.nameController,
                   hint: 'Enter your full name',
                   prefixIcon: Icons.person_outline_rounded,
                   textInputAction: TextInputAction.next,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Please enter your name';
-                    }
-                    return null;
-                  },
+                  validator: controller.validateName,
                 ),
                 const SizedBox(height: AppSpacing.md),
- 
+
                 FieldLabel('Email Address'),
                 const SizedBox(height: AppSpacing.sm),
                 RoundedTextField(
-                  controller: _emailController,
+                  controller: controller.emailController,
                   hint: 'Enter your email',
                   prefixIcon: Icons.mail_outline_rounded,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                    if (!emailRegex.hasMatch(v.trim())) {
-                      return 'Enter a valid email address';
-                    }
-                    return null;
-                  },
+                  validator: controller.validateEmail,
                 ),
                 const SizedBox(height: AppSpacing.md),
- 
+
                 FieldLabel('Password'),
                 const SizedBox(height: AppSpacing.sm),
-                RoundedTextField(
-                  controller: _passwordController,
-                  hint: 'Create a password',
-                  prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: _obscurePassword,
-                  textInputAction: TextInputAction.next,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: AppColors.textSecondary,
-                      size: 20,
+                Obx(
+                  () => RoundedTextField(
+                    controller: controller.passwordController,
+                    hint: 'Create a password',
+                    prefixIcon: Icons.lock_outline_rounded,
+                    obscureText: controller.obscurePassword.value,
+                    textInputAction: TextInputAction.next,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        controller.obscurePassword.value
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: AppColors.textSecondary,
+                        size: 20,
+                      ),
+                      onPressed: controller.toggleObscurePassword,
                     ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
+                    validator: controller.validatePassword,
                   ),
-                  validator: (v) {
-                    if (v == null || v.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
                 ),
                 const SizedBox(height: AppSpacing.md),
- 
+
                 FieldLabel('Confirm Password'),
                 const SizedBox(height: AppSpacing.sm),
-                RoundedTextField(
-                  controller: _confirmPasswordController,
-                  hint: 'Re-enter your password',
-                  prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: _obscureConfirmPassword,
-                  textInputAction: TextInputAction.done,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: AppColors.textSecondary,
-                      size: 20,
+                Obx(
+                  () => RoundedTextField(
+                    controller: controller.confirmPasswordController,
+                    hint: 'Re-enter your password',
+                    prefixIcon: Icons.lock_outline_rounded,
+                    obscureText: controller.obscureConfirmPassword.value,
+                    textInputAction: TextInputAction.done,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        controller.obscureConfirmPassword.value
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: AppColors.textSecondary,
+                        size: 20,
+                      ),
+                      onPressed: controller.toggleObscureConfirmPassword,
                     ),
-                    onPressed: () => setState(
-                      () => _obscureConfirmPassword = !_obscureConfirmPassword,
-                    ),
+                    validator: controller.validateConfirmPassword,
                   ),
-                  validator: (v) {
-                    if (v != _passwordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                
- 
-                PrimaryButton(
-                  label: 'Create Account',
-                  isLoading: _isLoading,
-                  onPressed: _onCreateAccount,
+
+                Obx(
+                  () => PrimaryButton(
+                    label: 'Create Account',
+                    isLoading: controller.isLoading.value,
+                    onPressed: controller.createAccount,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
- 
+
                 const OrDivider(),
                 const SizedBox(height: AppSpacing.lg),
- 
+
                 GoogleButton(onPressed: () {}),
                 const SizedBox(height: AppSpacing.xl),
- 
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text('Already have an account? ', style: AppTextStyles.bodyMd),
                     GestureDetector(
-                      onTap: () => Navigator.of(context).maybePop(),
+                      onTap: controller.goBackToLogin,
                       child: Text(
                         'Log In',
                         style: AppTextStyles.headingSm.copyWith(
@@ -216,7 +162,3 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 }
-
-
-
- 
