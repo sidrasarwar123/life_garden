@@ -1,15 +1,113 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:life_garden/core/controller/splash_controller.dart';
 import 'package:life_garden/core/theme/app_spacing.dart';
 import 'package:life_garden/core/widgets/animated_plant_logo.dart';
+import 'package:life_garden/screens/onboarding_screen.dart';
 
-class SplashScreen extends GetView<SplashController> {
-  const SplashScreen({super.key});
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key, this.onThemeToggle});
+
+  final VoidCallback? onThemeToggle;
 
   static const _gradientStart = Color(0xFF2E7D32);
   static const _gradientEnd = Color(0xFF81C784);
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _logoFade;
+  late final Animation<double> _logoScale;
+  late final Animation<double> _titleFade;
+  late final Animation<double> _titleScale;
+  late final Animation<double> _subtitleFade;
+  late final Animation<double> _subtitleScale;
+  late final Animation<double> _loaderFade;
+  late final Animation<double> _loaderScale;
+  Timer? _navigationTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+
+    _logoFade = _interval(0.0, 0.55);
+    _logoScale = _scaleInterval(0.0, 0.55, beginScale: 0.75);
+
+    _titleFade = _interval(0.18, 0.72);
+    _titleScale = _scaleInterval(0.18, 0.72, beginScale: 0.82);
+
+    _subtitleFade = _interval(0.32, 0.85);
+    _subtitleScale = _scaleInterval(0.32, 0.85, beginScale: 0.88);
+
+    _loaderFade = _interval(0.48, 1.0);
+    _loaderScale = _scaleInterval(0.48, 1.0, beginScale: 0.9);
+
+    _controller.forward();
+    _navigationTimer = Timer(const Duration(seconds: 4), _navigateToOnboarding);
+  }
+
+  Animation<double> _interval(double begin, double end) {
+    return CurvedAnimation(
+      parent: _controller,
+      curve: Interval(begin, end, curve: Curves.easeOutCubic),
+    );
+  }
+
+  Animation<double> _scaleInterval(
+    double begin,
+    double end, {
+    required double beginScale,
+  }) {
+    return Tween<double>(begin: beginScale, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Interval(begin, end, curve: Curves.easeOutBack),
+      ),
+    );
+  }
+
+  void _navigateToOnboarding() {
+    if (!mounted) return;
+
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 650),
+        reverseTransitionDuration: const Duration(milliseconds: 400),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return OnboardingScreen(onThemeToggle: widget.onThemeToggle);
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutCubic,
+          );
+          return FadeTransition(
+            opacity: curved,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _navigationTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,22 +121,33 @@ class SplashScreen extends GetView<SplashController> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [_gradientStart, Color(0xFF388E3C), _gradientEnd],
+            colors: [
+              SplashScreen._gradientStart,
+              Color(0xFF388E3C),
+              SplashScreen._gradientEnd,
+            ],
             stops: [0.0, 0.45, 1.0],
           ),
         ),
         child: Stack(
           fit: StackFit.expand,
           children: [
+            // Ambient light accents
             Positioned(
               top: -size.height * 0.08,
               left: -size.width * 0.15,
-              child: _AmbientGlow(size: size.width * 0.7, opacity: 0.10),
+              child: _AmbientGlow(
+                size: size.width * 0.7,
+                opacity: 0.10,
+              ),
             ),
             Positioned(
               bottom: size.height * 0.12,
               right: -size.width * 0.2,
-              child: _AmbientGlow(size: size.width * 0.55, opacity: 0.07),
+              child: _AmbientGlow(
+                size: size.width * 0.55,
+                opacity: 0.07,
+              ),
             ),
             SafeArea(
               child: Padding(
@@ -47,17 +156,16 @@ class SplashScreen extends GetView<SplashController> {
                   children: [
                     const Spacer(flex: 3),
                     _AnimatedBlock(
-                      fade: controller.logoFade,
-                      scale: controller.logoScale,
+                      fade: _logoFade,
+                      scale: _logoScale,
                       child: AnimatedPlantLogo(size: logoSize),
                     ),
                     SizedBox(
-                      height:
-                          size.height < 640 ? AppSpacing.lg : AppSpacing.xl,
+                      height: size.height < 640 ? AppSpacing.lg : AppSpacing.xl,
                     ),
                     _AnimatedBlock(
-                      fade: controller.titleFade,
-                      scale: controller.titleScale,
+                      fade: _titleFade,
+                      scale: _titleScale,
                       child: Text(
                         'Life Garden',
                         textAlign: TextAlign.center,
@@ -72,8 +180,8 @@ class SplashScreen extends GetView<SplashController> {
                     ),
                     const SizedBox(height: AppSpacing.sm + 2),
                     _AnimatedBlock(
-                      fade: controller.subtitleFade,
-                      scale: controller.subtitleScale,
+                      fade: _subtitleFade,
+                      scale: _subtitleScale,
                       child: Text(
                         'Grow Your Life',
                         textAlign: TextAlign.center,
@@ -88,13 +196,12 @@ class SplashScreen extends GetView<SplashController> {
                     ),
                     const Spacer(flex: 4),
                     _AnimatedBlock(
-                      fade: controller.loaderFade,
-                      scale: controller.loaderScale,
+                      fade: _loaderFade,
+                      scale: _loaderScale,
                       child: const _PremiumLoader(),
                     ),
                     SizedBox(
-                      height:
-                          size.height < 640 ? AppSpacing.lg : AppSpacing.xl,
+                      height: size.height < 640 ? AppSpacing.lg : AppSpacing.xl,
                     ),
                   ],
                 ),
@@ -122,7 +229,10 @@ class _AnimatedBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: fade,
-      child: ScaleTransition(scale: scale, child: child),
+      child: ScaleTransition(
+        scale: scale,
+        child: child,
+      ),
     );
   }
 }
@@ -163,7 +273,10 @@ class _PremiumLoader extends StatelessWidget {
 }
 
 class _AmbientGlow extends StatelessWidget {
-  const _AmbientGlow({required this.size, required this.opacity});
+  const _AmbientGlow({
+    required this.size,
+    required this.opacity,
+  });
 
   final double size;
   final double opacity;

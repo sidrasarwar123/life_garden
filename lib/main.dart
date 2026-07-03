@@ -1,41 +1,60 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:life_garden/core/controller/theme_controller.dart';
-
 import 'package:life_garden/core/routes/app_routes.dart';
 import 'package:life_garden/core/theme/app_theme.dart';
 import 'package:life_garden/firebase_options.dart';
-
+import 'package:life_garden/screens/splash_screen.dart';
+ 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  Get.put(ThemeController()); // app-wide theme controller
-
+);
+  
   runApp(const LifeGardenApp());
 }
-
-class LifeGardenApp extends StatelessWidget {
+ 
+class LifeGardenApp extends StatefulWidget {
   const LifeGardenApp({super.key});
-
+ 
+  @override
+  State<LifeGardenApp> createState() => _LifeGardenAppState();
+}
+ 
+class _LifeGardenAppState extends State<LifeGardenApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+ 
+  void _toggleThemeMode() {
+    setState(() {
+      _themeMode =
+          _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
+ 
   @override
   Widget build(BuildContext context) {
-    final themeController = Get.find<ThemeController>();
-
-    return Obx(
-      () => GetMaterialApp(
-        title: 'Life Garden',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: themeController.themeMode.value,
-        
-        initialRoute: AppRoutes.splash,
-        getPages: AppRoutes.routes,
-      ),
+    return MaterialApp(
+      title: 'Life Garden',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: _themeMode,
+      themeAnimationDuration: const Duration(milliseconds: 350),
+      themeAnimationCurve: Curves.easeInOutCubic,
+ 
+      //  SplashScreen ko route ke zariye open karo
+      initialRoute: AppRoutes.splash,
+      routes: AppRoutes.routes,
+ 
+      //  onGenerateRoute — SplashScreen ko themeToggle pass karne ke liye
+      onGenerateRoute: (settings) {
+        if (settings.name == AppRoutes.splash) {
+          return MaterialPageRoute(
+            builder: (_) => SplashScreen(onThemeToggle: _toggleThemeMode),
+          );
+        }
+        return null; // baaki routes AppRoutes.routes handle karega
+      },
     );
   }
 }
